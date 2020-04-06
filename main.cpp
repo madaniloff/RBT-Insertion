@@ -13,6 +13,9 @@ using namespace std;
 
 //Struct for node
 struct Node {
+  Node* parent;
+  Node* grandparent;
+  Node* uncle;
   Node* right;
   Node* left;
   int data;
@@ -32,19 +35,20 @@ struct Trunk {
 };
 
 //Function initializations
-void manualInput(Node* &head);
+void manualInput(Node* &head, Node* &prev);
 void fileInput(Node* &head);
 void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j);
 void printTree(Node* current, Trunk* prev, bool isLeft);
-void printColor(Node* current, Trunk* prev, bool isLeft);
 void showTrunks(Trunk *p);
-void numInsert(Node* &head, Node* current, int num);
+void numInsert(Node* &head, Node* current, Node* &prev, int num);
 void fileInsert(Node* &head, int* arr, int n);
 void buildTree(Node* &head, Node* current, int val);
+void fixTree(Node* &head, Node* &current, Node* &prev);
 
 int main() {
   //Set nodes to NULL
   Node* head = NULL;
+  Node* prev = NULL;
   Node* right = NULL;
   Node* left = NULL;
   bool running = true;
@@ -56,17 +60,14 @@ int main() {
     cin.ignore();
     //Single number
     if (input == 1) {
-      manualInput(head);
+      manualInput(head, prev);
     }
     else if (input == 2) {
       fileInput(head);
     }
     //Display
     else if (input == 3) {
-      cout << "|========NUMERICAL DISPLAY========|" << endl;
       printTree(head, NULL, false);
-      cout << "|==========COLOR DISPLAY==========|" << endl;
-      printColor(head, NULL, false);
     }
     //Quit
     else if (input == 4) {
@@ -76,13 +77,13 @@ int main() {
 } 
 
 //Enter a single number
-void manualInput(Node* &head) {
+void manualInput(Node* &head, Node* &prev) {
   //Prompt user
   int mInput;
   cout << "Enter a number: " << endl;
   cin >> mInput;
   cin.ignore();
-  numInsert(head, head, mInput);
+  numInsert(head, head, prev, mInput);
 }
 
 //Read input from a file
@@ -177,7 +178,7 @@ void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int coun
 }
 
 //Insert one number into tree
-void numInsert(Node* &head, Node* current, int num) {
+void numInsert(Node* &head, Node* current, Node* &prev, int num) {
   //If head is NULL
   if (head == NULL) {
     //Create new node and set its color to black
@@ -189,26 +190,42 @@ void numInsert(Node* &head, Node* current, int num) {
   else if (head != NULL) {
     //If val is greater than or equal to current->data
     if (num >= current->data) {
+      prev = current;
+      current = current->right;
       //If current->right is NULL
-      if (current->right == NULL) {
-	current->right = new Node();
-	current->right->data = num;
+      if (current == NULL) {
+	//Create new node and set the color to red
+	current = new Node();
+	current->data = num;
+	current->color = 'R';
+	prev->right = current;
+	current->parent = prev;
+	//Balance the red black tree
+	fixTree(head, current, prev);
       }
       //If current->right != NULL
-      else if (current->right != NULL) {
-	numInsert(head, current->right, num);
+      else if (current != NULL) {
+	numInsert(head, current, prev, num);
       }
     }
     //If val is less than current->data
     else if (num < current->data) {
+      prev = current;
+      current = current->left;
       //If current->left is NULL
-      if (current->left == NULL) {
-	current->left = new Node();
-	current->left->data = num;
+      if (current == NULL) {
+	//Create new node and set the color to red
+	current = new Node();
+	current->data = num;
+	current->color = 'R';
+	prev->left = current;
+	current->parent = prev;
+	//Balance the red black tree
+	fixTree(head, current, prev);
       }
       //If current->left isn't NULL
-      else if (current->left != NULL) {
-	numInsert(head, current->left, num);
+      else if (current != NULL) {
+	numInsert(head, current, prev, num);
       }
     }
   }
@@ -271,7 +288,7 @@ void printTree(Node* current, Trunk* prev, bool isLeft) {
     prev->str = prev_str;
   }
   showTrunks(trunk);
-  cout << current->data << endl;
+  cout << current->data << " " <<  current->color << endl;
   //If prev == true
   if (prev) {
     prev->str = prev_str;
@@ -280,35 +297,14 @@ void printTree(Node* current, Trunk* prev, bool isLeft) {
   printTree(current->right, trunk, false);
 }
 
-//Print colors of the nodes
-void printColor(Node* current, Trunk* prev, bool isLeft) {
- //If the current is empty
-  if (current == NULL) {
-    //End the functiom
-    return;
+//Red Black Tree Balancing functions are partially from GeeksforGeeks
+//www.geeksforgeeks.org/c-program-red-black-tree-insertion
+//Fix red black tree insertion violations
+void fixTree(Node* &head, Node* &current, Node* &prev) {
+  //Create nodes
+  Node* parent = prev;
+  Node* grandparent = NULL;
+  while (current != head && current->color != 'B' && prev->color == 'R') {
+
   }
-  //Create a tab character
-  char* prev_str = (char*)("    ");
-  Trunk *trunk = new Trunk(prev, prev_str);
-  printTree(current->left, trunk, true);
-  //If prev isn't 0 but is false
-  if (!prev) {
-    trunk->str = (char*)("---");
-  }
-  else if (isLeft == true) {
-    trunk->str = (char*)(".---");
-    prev_str = (char*)("   |");
-  }
-  else {
-    trunk->str = (char*)("`---");
-    prev->str = prev_str;
-  }
-  showTrunks(trunk);
-  cout << current->color << endl;
-  //If prev == true
-  if (prev) {
-    prev->str = prev_str;
-  }
-  trunk->str = (char*)("   |");
-  printTree(current->right, trunk, false);
-} 
+}
