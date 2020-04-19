@@ -15,7 +15,6 @@ using namespace std;
 struct Node {
   Node* parent;
   Node* grandparent;
-  Node* uncle;
   Node* right;
   Node* left;
   int data;
@@ -35,19 +34,20 @@ struct Trunk {
 };
 
 //Function initializations
-void manualInput(Node* &head, Node* &prev);
+void manualInput(Node* &head, Node* &current, Node* &prev);
 void fileInput(Node* &head);
 void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j);
 void printTree(Node* current, Trunk* prev, bool isLeft);
 void showTrunks(Trunk *p);
-void numInsert(Node* &head, Node* current, Node* &prev, int num);
+void numInsert(Node* &head, Node* &current, Node* &prev, int num);
 void fileInsert(Node* &head, int* arr, int n);
 void buildTree(Node* &head, Node* current, int val);
-void fixTree(Node* &head, Node* &current, Node* &prev);
+void fixTree(Node* &head, Node* &current);
 
 int main() {
   //Set nodes to NULL
   Node* head = NULL;
+  Node* current = NULL;
   Node* prev = NULL;
   Node* right = NULL;
   Node* left = NULL;
@@ -60,7 +60,7 @@ int main() {
     cin.ignore();
     //Single number
     if (input == 1) {
-      manualInput(head, prev);
+      manualInput(head, current, prev);
     }
     else if (input == 2) {
       fileInput(head);
@@ -77,13 +77,14 @@ int main() {
 } 
 
 //Enter a single number
-void manualInput(Node* &head, Node* &prev) {
+void manualInput(Node* &head, Node* &current, Node* &prev) {
   //Prompt user
   int mInput;
   cout << "Enter a number: " << endl;
   cin >> mInput;
   cin.ignore();
-  numInsert(head, head, prev, mInput);
+  current = head;
+  numInsert(head, current, prev, mInput);
 }
 
 //Read input from a file
@@ -178,7 +179,7 @@ void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int coun
 }
 
 //Insert one number into tree
-void numInsert(Node* &head, Node* current, Node* &prev, int num) {
+void numInsert(Node* &head, Node* &current, Node* &prev, int num) {
   //If head is NULL
   if (head == NULL) {
     //Create new node and set its color to black
@@ -201,7 +202,7 @@ void numInsert(Node* &head, Node* current, Node* &prev, int num) {
 	prev->right = current;
 	current->parent = prev;
 	//Balance the red black tree
-	fixTree(head, current, prev);
+	fixTree(head, current);
       }
       //If current->right != NULL
       else if (current != NULL) {
@@ -221,7 +222,7 @@ void numInsert(Node* &head, Node* current, Node* &prev, int num) {
 	prev->left = current;
 	current->parent = prev;
 	//Balance the red black tree
-	fixTree(head, current, prev);
+	fixTree(head, current);
       }
       //If current->left isn't NULL
       else if (current != NULL) {
@@ -300,11 +301,27 @@ void printTree(Node* current, Trunk* prev, bool isLeft) {
 //Red Black Tree Balancing functions are partially from GeeksforGeeks
 //www.geeksforgeeks.org/c-program-red-black-tree-insertion
 //Fix red black tree insertion violations
-void fixTree(Node* &head, Node* &current, Node* &prev) {
+void fixTree(Node* &head, Node* &current) {
   //Create nodes
-  Node* parent = prev;
+  Node* parent = NULL;
   Node* grandparent = NULL;
-  while (current != head && current->color != 'B' && prev->color == 'R') {
-
+  while ((current != head) && (current->color != 'B') && (current->parent->color == 'R')) {
+    parent = current->parent;
+    grandparent = current->parent->parent;
+    //If Parent is left child of grandparent
+    if (parent == grandparent->left) {
+      //Create uncle node
+      Node* uncle = grandparent->right;
+      //If uncle is red (recolor)
+      if (uncle != NULL && uncle->color == 'R') {
+	grandparent->color = 'R';
+	parent->color = 'B';
+	uncle->color = 'B';
+	current = grandparent;
+      }
+      else {
+	
+      }
+    }
   }
 }
