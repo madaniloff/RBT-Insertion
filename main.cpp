@@ -35,14 +35,16 @@ struct Trunk {
 
 //Function initializations
 void manualInput(Node* &head, Node* &current, Node* &prev);
-void fileInput(Node* &head);
-void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j);
+void fileInput(Node* &head, Node* &current, Node* &prev);
+void Parse(Node* &head, Node* &current, Node* &prev, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j);
 void printTree(Node* current, Trunk* prev, bool isLeft);
 void showTrunks(Trunk *p);
 void numInsert(Node* &head, Node* &current, Node* &prev, int num);
-void fileInsert(Node* &head, int* arr, int n);
+void fileInsert(Node* &head, Node* &current, Node* &prev, int* arr, int n);
 void buildTree(Node* &head, Node* current, int val);
 void fixTree(Node* &head, Node* &current);
+void rotateRight(Node* &head, Node* &current);
+void rotateLeft(Node* &head, Node* &current);
 
 int main() {
   //Set nodes to NULL
@@ -63,7 +65,7 @@ int main() {
       manualInput(head, current, prev);
     }
     else if (input == 2) {
-      fileInput(head);
+      fileInput(head, current, prev);
     }
     //Display
     else if (input == 3) {
@@ -89,7 +91,7 @@ void manualInput(Node* &head, Node* &current, Node* &prev) {
 
 //Read input from a file
 //This is from my heap and binary search tree project
-void fileInput(Node* &head) {
+void fileInput(Node* &head, Node* &current, Node* &prev) {
   //Initialize variables
   char input[100];
   int token[100];
@@ -120,7 +122,7 @@ void fileInput(Node* &head) {
     //Close the file
     file.close();
     //Parse the input
-    Parse(head, input, token, ftoken, num, count, total, exp, j);
+    Parse(head, current, prev, input, token, ftoken, num, count, total, exp, j);
   }
   //If the file can't be opened
   else {
@@ -129,7 +131,7 @@ void fileInput(Node* &head) {
 } 
 
 //Parse input
-void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j) {
+void Parse(Node* &head, Node* &current, Node* &prev, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j) {
     int outputarr[100];
   //Set the arrays to all zeros
   for (int i = 0; i < 100; i++) {
@@ -174,8 +176,7 @@ void Parse(Node* &head, char* input, int* token, int* heaparr, int num, int coun
       count++;
     }
   }
-  fileInsert(head, heaparr, count);
-  printTree(head, NULL, false);
+  fileInsert(head, current, prev, heaparr, count);
 }
 
 //Insert one number into tree
@@ -233,23 +234,13 @@ void numInsert(Node* &head, Node* &current, Node* &prev, int num) {
 }
 
 //Insert numbers from a file
-void fileInsert(Node* &head, int* arr, int n) {
+void fileInsert(Node* &head, Node* &current, Node* &prev, int* arr, int n) {
+  current = head;
   for (int i = 0; i < n; i++) {
-    buildTree(head, head, arr[i]);
+    numInsert(head, current, prev, arr[i]);
   }
 }
 
-//Build tree with numbers from the file
-void buildTree(Node* &head, Node* current, int val) {
-  //If head is NULL
-  if (head == NULL) {
-    
-  }
-  //If head isn't NULL
-  if (head != NULL) {
-    
-  }
-}
 //These print tree functions are partially from techiedelight with help from Stefan Ene, period 3
 //I'm reusing these methods from my binary search tree project
 //www.com/techiedelight.com/c-program-print-binary-tree
@@ -322,13 +313,13 @@ void fixTree(Node* &head, Node* &current) {
       else {
 	//If current is right child of parent (left rotation)
 	if (current = parent->right) {
-	  //rotateLeft(head, parent);
+	  rotateLeft(head, parent);
 	  current = parent;
 	  parent = current->parent;
 	}
 	//If current is left child of parent (right rotation)
 	else if (current == parent->left) {
-	  //rotateRight(head, grandparent);
+	  rotateRight(head, grandparent);
 	  //Swap the colors
 	  swap(parent->color, grandparent->color);
 	  current = parent;
@@ -349,28 +340,67 @@ void fixTree(Node* &head, Node* &current) {
       else {
 	//If current is right child of parent (left rotation)
 	if (current == parent->right) {
-	  //rotateLeft(head, grandparent);
+	  rotateLeft(head, grandparent);
 	  //Swap the colors
-	  swap(parent-color, grandparent->color);
+	  swap(parent->color, grandparent->color);
 	  current = parent;
 	}
 	//If current is left child of parent (right rotation)
 	if (current == parent->left) {
-	  //rotateRight(head, parent);
+	  rotateRight(head, parent);
 	  current = parent;
 	  parent = current->parent;
 	}
       }
     }
   }
+  head->color = 'B';
 }
 
 //Rotate the tree right
 void rotateRight(Node* &head, Node* &current) {
-
+  Node* currentleft = current->left;
+  current->left = currentleft->right;
+  //If current's left isn't NULL
+  if (current->left != NULL) {
+    current->left->parent = current;
+  }
+  currentleft->parent=current->parent;
+  //If current's parent is NULL
+  if (current->parent == NULL) {
+    head = currentleft;
+  }
+  //If current is equal to current's parent's left
+  else if (current == current->parent->left) {
+    current->parent->left = currentleft;
+  }
+  else {
+    current->parent->right = currentleft;
+  }
+  currentleft->right = current;
+  current->parent = currentleft;
 }
 
 //Rotate the tree left
 void rotateLeft(Node* &head, Node* &current) {
-  
+  Node* currentright = current->right;
+  current->right = currentright->left;
+  //If current's right isn't NULL
+  if (current->right != NULL) {
+    current->right->parent = current;
+  }
+  currentright->parent = current->parent;
+  //If current's parent is NULL
+  if (current->parent == NULL) {
+    head = currentright;
+  }
+  //If current is equal to current's parent's left
+  else if (current == current->parent->left) {
+    current->parent->left = currentright;
+  }
+  else {
+    current->parent->right = currentright;
+  }
+  currentright->left = current;
+  current->parent = currentright;
 }
