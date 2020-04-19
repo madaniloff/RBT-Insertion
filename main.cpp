@@ -320,8 +320,57 @@ void fixTree(Node* &head, Node* &current) {
 	current = grandparent;
       }
       else {
-	
+	//If current is right child of parent (left rotation)
+	if (current = parent->right) {
+	  //rotateLeft(head, parent);
+	  current = parent;
+	  parent = current->parent;
+	}
+	//If current is left child of parent (right rotation)
+	else if (current == parent->left) {
+	  //rotateRight(head, grandparent);
+	  //Swap the colors
+	  swap(parent->color, grandparent->color);
+	  current = parent;
+	}
+      }
+    }
+    //If parent is right child of grandparent
+    if (parent == grandparent->right) {
+      //Create uncle node
+      Node* uncle = grandparent->left;
+      //If uncle is red (recolor)
+      if (uncle != NULL && uncle->color == 'R') {
+	grandparent->color = 'R';
+	parent->color = 'B';
+	uncle->color = 'B';
+	current = grandparent;
+      }
+      else {
+	//If current is right child of parent (left rotation)
+	if (current == parent->right) {
+	  //rotateLeft(head, grandparent);
+	  //Swap the colors
+	  swap(parent-color, grandparent->color);
+	  current = parent;
+	}
+	//If current is left child of parent (right rotation)
+	if (current == parent->left) {
+	  //rotateRight(head, parent);
+	  current = parent;
+	  parent = current->parent;
+	}
       }
     }
   }
+}
+
+//Rotate the tree right
+void rotateRight(Node* &head, Node* &current) {
+
+}
+
+//Rotate the tree left
+void rotateLeft(Node* &head, Node* &current) {
+  
 }
