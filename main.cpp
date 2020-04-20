@@ -14,7 +14,6 @@ using namespace std;
 //Struct for node
 struct Node {
   Node* parent;
-  Node* grandparent;
   Node* right;
   Node* left;
   int data;
@@ -129,7 +128,7 @@ void fileInput(Node* &head, Node* &current, Node* &prev) {
   }
 } 
 
-//Parse input
+//Parse input, reused from my binary search tree project
 void Parse(Node* &head, Node* &current, Node* &prev, char* input, int* token, int* heaparr, int num, int count, int total, int exp, int j) {
     int outputarr[100];
   //Set the arrays to all zeros
@@ -190,8 +189,6 @@ void numInsert(Node* &head, Node* &current, Node* &prev, int num) {
   //If head isn't NULL
   else if (head != NULL) {
     //If val is greater than or equal to current->data
-    //cout << "currdata" << head->data << endl;
-    //cout << "num" << num << endl;
     if (num >= current->data) {
       prev = current;
       current = current->right;
@@ -326,7 +323,7 @@ void fixTree(Node* &head, Node* &current) {
       }
     }
     //If parent is right child of grandparent
-    if (nparent == grandparent->right) {
+    else {
       //Create uncle node
       Node* uncle = grandparent->left;
       //If uncle is red (recolor)
@@ -361,7 +358,7 @@ void rotateRight(Node* &head, Node* &current) {
   if (current->left != NULL) {
     current->left->parent = current;
   }
-  currentleft->parent=current->parent;
+  currentleft->parent = current->parent;
   //If current's parent is NULL
   if (current->parent == NULL) {
     head = currentleft;
