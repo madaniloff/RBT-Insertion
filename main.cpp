@@ -41,7 +41,6 @@ void printTree(Node* current, Trunk* prev, bool isLeft);
 void showTrunks(Trunk *p);
 void numInsert(Node* &head, Node* &current, Node* &prev, int num);
 void fileInsert(Node* &head, Node* &current, Node* &prev, int* arr, int n);
-void buildTree(Node* &head, Node* current, int val);
 void fixTree(Node* &head, Node* &current);
 void rotateRight(Node* &head, Node* &current);
 void rotateLeft(Node* &head, Node* &current);
@@ -191,6 +190,8 @@ void numInsert(Node* &head, Node* &current, Node* &prev, int num) {
   //If head isn't NULL
   else if (head != NULL) {
     //If val is greater than or equal to current->data
+    //cout << "currdata" << head->data << endl;
+    //cout << "num" << num << endl;
     if (num >= current->data) {
       prev = current;
       current = current->right;
@@ -235,8 +236,8 @@ void numInsert(Node* &head, Node* &current, Node* &prev, int num) {
 
 //Insert numbers from a file
 void fileInsert(Node* &head, Node* &current, Node* &prev, int* arr, int n) {
-  current = head;
   for (int i = 0; i < n; i++) {
+    current = head;
     numInsert(head, current, prev, arr[i]);
   }
 }
@@ -294,63 +295,58 @@ void printTree(Node* current, Trunk* prev, bool isLeft) {
 //Fix red black tree insertion violations
 void fixTree(Node* &head, Node* &current) {
   //Create nodes
-  Node* parent = NULL;
+  Node* nparent = NULL;
   Node* grandparent = NULL;
   while ((current != head) && (current->color != 'B') && (current->parent->color == 'R')) {
-    parent = current->parent;
+    nparent = current->parent;
     grandparent = current->parent->parent;
     //If Parent is left child of grandparent
-    if (parent == grandparent->left) {
+    if (nparent == grandparent->left) {
       //Create uncle node
       Node* uncle = grandparent->right;
       //If uncle is red (recolor)
       if (uncle != NULL && uncle->color == 'R') {
 	grandparent->color = 'R';
-	parent->color = 'B';
+	nparent->color = 'B';
 	uncle->color = 'B';
 	current = grandparent;
       }
       else {
 	//If current is right child of parent (left rotation)
-	if (current = parent->right) {
-	  rotateLeft(head, parent);
-	  current = parent;
-	  parent = current->parent;
+	if (current == nparent->right) {
+	  rotateLeft(head, nparent);
+	  current = nparent;
+	  nparent = current->parent;
 	}
 	//If current is left child of parent (right rotation)
-	else if (current == parent->left) {
-	  rotateRight(head, grandparent);
-	  //Swap the colors
-	  swap(parent->color, grandparent->color);
-	  current = parent;
-	}
+	rotateRight(head, grandparent);
+	//Swap the colors
+	swap(nparent->color, grandparent->color);
+	current = nparent;
       }
     }
     //If parent is right child of grandparent
-    if (parent == grandparent->right) {
+    if (nparent == grandparent->right) {
       //Create uncle node
       Node* uncle = grandparent->left;
       //If uncle is red (recolor)
       if (uncle != NULL && uncle->color == 'R') {
 	grandparent->color = 'R';
-	parent->color = 'B';
+	nparent->color = 'B';
 	uncle->color = 'B';
 	current = grandparent;
       }
       else {
-	//If current is right child of parent (left rotation)
-	if (current == parent->right) {
-	  rotateLeft(head, grandparent);
-	  //Swap the colors
-	  swap(parent->color, grandparent->color);
-	  current = parent;
-	}
 	//If current is left child of parent (right rotation)
-	if (current == parent->left) {
-	  rotateRight(head, parent);
-	  current = parent;
-	  parent = current->parent;
+	if (current == nparent->left) {
+	  rotateRight(head, nparent);
+	  current = nparent;
+	  nparent = current->parent;
 	}
+	//If current is right child of parent (left rotation)
+	rotateLeft(head, grandparent);
+	swap(nparent->color, grandparent->color);
+	current = nparent;
       }
     }
   }
