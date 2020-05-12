@@ -507,6 +507,8 @@ bool Search(Node* current, int num) {
 }
 
 //Delete a node
+//The following functions are partially from Geeks for Geeks tutorial
+//www.geeksforgeeks.org/red-black-tree-set-3-delete-2
 void Remove(Node* &head, Node* &current, int num) {
   Node* u = BSTreplace(current);
   Node* parent = current->parent;
@@ -556,8 +558,8 @@ void Remove(Node* &head, Node* &current, int num) {
 	  temp = temp->left;
 	}
 	//Swap the values
-	swapValues(current, temp);
-	Remove(head, temp, temp->data);
+	swapValues(temp, current);
+	Remove(head, current->right, temp->data);
       }
     }
     //Black
@@ -612,8 +614,8 @@ void Remove(Node* &head, Node* &current, int num) {
 	  temp = temp->left;
 	}
 	//Swap the values
-	swapValues(current, temp);
-	Remove(head, temp, temp->data);
+	swapValues(temp, current);
+	Remove(head, current->right, temp->data);
       }
     }
   }
@@ -628,8 +630,6 @@ void Remove(Node* &head, Node* &current, int num) {
 }
 
 //Fix double black violation
-//These functiosn are partially from Geeks for Geeks tutorial
-//www.geeksforgeeks.org/red-black-tree-set-3-delete-2
 void fixDoubleBlack(Node* &head, Node* c) {
   if (c == head) {
     return;
@@ -698,7 +698,6 @@ void fixDoubleBlack(Node* &head, Node* c) {
 	}
 	//Two black children
 	else {
-	  cout << "ASDASDASDASDA" << endl;
 	  sibling->color = 'R';
 	  if (parent->color == 'B') {
 	    fixDoubleBlack(head, parent);
