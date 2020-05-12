@@ -518,6 +518,10 @@ void Remove(Node* &head, Node* &current, int num) {
     if (current->color == 'R') {
       //Leaf node
       if (current->left == NULL && current->right == NULL) {
+	//If sibling isn't NULL color red
+	if (current->sibling() != NULL) {
+	  current->sibling()->color = 'R';
+	}
 	delete current;
 	current = NULL;
       }
@@ -528,6 +532,7 @@ void Remove(Node* &head, Node* &current, int num) {
 	  current->data = u->data;
 	  current->left = current->right = NULL;
 	  delete u;
+	  u = NULL;
 	}
 	//If not head
 	else {
@@ -538,6 +543,7 @@ void Remove(Node* &head, Node* &current, int num) {
 	    parent->right = u;
 	  }
 	  delete current;
+	  current = NULL;
 	  u->parent = parent;
 	  //If current and u are both black
 	  if (current->color == 'B' && u->color == 'B') {
@@ -637,9 +643,6 @@ void fixDoubleBlack(Node* &head, Node* c) {
   else {
     Node* sibling = c->sibling();
     Node* parent = c->parent;
-    cout << "C: " << c->data << endl;;
-    cout << "S: " << sibling->data << endl;;
-    cout << "P: " << parent->data << endl;
     //No siblings
     if (sibling == NULL) {
       //Push up to parent
@@ -779,7 +782,7 @@ Node* BSTreplace(Node* c){
 
 //Finds node that doesn't have a left child in the subtree of the given node
 Node *successor(Node *c) {
-  Node * temp = c;
+  Node* temp = c;
   while (temp->left != NULL) {
     temp = temp->left;
   }
