@@ -1,6 +1,6 @@
-//This program creates a red black tree, which can add nodes either from input or from a file
+//This program creates a red black tree, which can add or delete nodes either from input or from a file
 //Author: Mark Daniloff
-//Date: 4/7/2020
+//Date: 5/11/2020
 
 #include <iostream>
 #include <cstring>
@@ -18,6 +18,45 @@ struct Node {
   Node* left;
   int data;
   char color;
+  //The following functions are from Geeks for Geeks
+  //www.geeksforgeeks.org/red-black-tree-set-3-delete-2/
+  //Check if node is left child of parent
+  bool isOnLeft() {
+    return this == parent->left;
+  }
+  bool isOnRight() {
+    return this == parent->right;
+  }
+  bool hasRedChild() {
+      return (left != NULL and left->color == 'R') or
+	(right != NULL and right->color == 'R');
+    }
+  //Returns pointer to sibling
+  Node *sibling() {
+    //If no parent sibling == NULL
+    if (parent == NULL) {
+      return NULL;
+    }
+    else if (isOnLeft()) {
+      return parent->right;
+    }
+    else if (isOnRight()) {
+      return parent->left;
+    }
+  }
+  //Moves node down and moves given node in its place
+  void moveDown(Node *nParent) {
+    if (parent != NULL) {
+      if (isOnLeft()) {
+	parent->left = nParent;
+      }
+      else {
+	parent->right = nParent;
+      }
+    }
+    nParent->parent = parent;
+    parent = nParent;
+  }
 };
 
 //Struct for printing tree
@@ -43,6 +82,14 @@ void fileInsert(Node* &head, Node* &current, Node* &prev, int* arr, int n);
 void fixTree(Node* &head, Node* &current);
 void rotateRight(Node* &head, Node* &current);
 void rotateLeft(Node* &head, Node* &current);
+bool Search(Node* current, int num);
+void Remove(Node* &head, Node* &current, int num);
+void fixDoubleBlack(Node* &head, Node* c);
+void leftRotate(Node* &head, Node* c);
+void rightRotate(Node* &head, Node* c);
+void swapValues(Node* c, Node* s);
+Node* BSTreplace(Node* c);
+Node* successor(Node* c);
 
 int main() {
   //Set nodes to NULL
@@ -55,7 +102,7 @@ int main() {
   int input;
   //Ask user for input
   while (running == true) {
-    cout << "Enter 1 to add a single number, 2 to read in from a file, 3 to display the tree, or 4 to quit" << endl;
+    cout << "Enter 1 to add a single number, 2 to read in from a file, 3 to display the tree, 4 to search the tree, 5 to delete a node, or 6 to quit" << endl;
     cin >> input;
     cin.ignore();
     //Single number
@@ -69,8 +116,39 @@ int main() {
     else if (input == 3) {
       printTree(head, NULL, false);
     }
-    //Quit
+    //Search
     else if (input == 4) {
+      //Ask for input
+      cout << "Enter the number you want to search for" << endl;
+      cin >> input;
+      cin.ignore();
+      //If node exists
+      if (Search(head, input) == true) {
+	cout << "This node exists!" << endl;
+      }
+      //If node doesn't exist
+      else if (Search(head, input) == false) {
+	cout << "This node does not exist!" << endl;
+      }
+    }
+    //Remove
+    else if (input == 5) {
+      //Ask for input
+      cout << "Enter the number you want to delete" << endl;
+      cin >> input;
+      cin.ignore();
+      //If node exists
+      if (Search(head,input) == true) {
+	current = head;
+	Remove(head, current, input);
+      }
+      //If node doesn't exist
+      else if (Search(head, input) == false) {
+	cout << "This node does not exist!" << endl;
+      }
+    }
+    //Quit
+    else if (input == 6) {
       running = false;
     }
   }
@@ -396,4 +474,315 @@ void rotateLeft(Node* &head, Node* &current) {
   }
   currentright->left = current;
   current->parent = currentright;
+}
+
+//Search the tree for a node
+bool Search(Node* current, int num) {
+  //If the number is found
+  if (current->data == num) {
+    return true;
+  }
+  //If the current data is greater than num
+  else if (current->data > num) {
+    if (current->left != NULL) {
+      Search(current->left, num);
+    }
+    else {
+      return false;
+    }
+  }
+  //If the current data is less than num
+  else if (current->data < num) {
+    if (current->right != NULL) {
+      Search(current->right, num);
+    }
+    else {
+      return false;
+    }
+  }
+  //If the number doesn't exist
+  else {
+    return false;
+  }
+}
+
+//Delete a node
+void Remove(Node* &head, Node* &current, int num) {
+  Node* u = BSTreplace(current);
+  Node* parent = current->parent;
+  //If num is the head data
+  if (num == current->data) {
+    //Red node 
+    if (current->color == 'R') {
+      //Leaf node
+      if (current->left == NULL && current->right == NULL) {
+	delete current;
+	current = NULL;
+      }
+      //One child
+      else if (current->left == NULL || current->right == NULL) {
+	//Head
+	if (current == head) {
+	  current->data = u->data;
+	  current->left = current->right = NULL;
+	  delete u;
+	}
+	//If not head
+	else {
+	  if (current->isOnLeft()) {
+	    parent->left = u;
+	  }
+	  else {
+	    parent->right = u;
+	  }
+	  delete current;
+	  u->parent = parent;
+	  //If current and u are both black
+	  if (current->color == 'B' && u->color == 'B') {
+	    fixDoubleBlack(head, u);
+	  }
+	  //Current or u is black
+	  else {
+	    //Color u black
+	    u->color = 'B';
+	  }
+	}
+      }
+      //Two children
+      else if (current->left != NULL && current->right != NULL) {
+	//Swap current with minimum value
+	Node* temp = current->right;
+	while (temp->left != NULL) {
+	  temp = temp->left;
+	}
+	//Swap the values
+	swapValues(current, temp);
+	Remove(head, temp, temp->data);
+      }
+    }
+    //Black
+    else if (current->color == 'B') {
+      //Leaf
+      if (current->left == NULL && current->right == NULL) {
+	//Head
+	if (current->data == head->data) {
+	  delete head;
+	  head = NULL;
+	}
+	else {
+	  fixDoubleBlack(head, current);
+	  delete current;
+	  current = NULL;
+	}
+      }
+      //One child
+      else if (current->left == NULL || current->right == NULL) {
+	//Head
+	if (current == head) {
+	  current->data = u->data;
+	  current->left = current->right = NULL;
+	  delete u;
+	}
+	//If not head
+	else {
+	  if (current->isOnLeft()) {
+	    parent->left = u;
+	  }
+	  else {
+	    parent->right = u;
+	  }
+	  delete current;
+	  u->parent = parent;
+	  //If current and u are both black
+	  if (current->color == 'B' && u->color == 'B') {
+	    fixDoubleBlack(head, u);
+	  }
+	  //Current or u is black
+	  else {
+	    //Color u black
+	    u->color = 'B';
+	  }
+	}
+      }
+      //Two children
+      else if (current->left != NULL && current->right != NULL) {
+	//Swap current with minimum value
+	Node* temp = current->right;
+	while (temp->left != NULL) {
+	  temp = temp->left;
+	}
+	//Swap the values
+	swapValues(current, temp);
+	Remove(head, temp, temp->data);
+      }
+    }
+  }
+  //If num is greater than current data
+  else if (num > current->data) {
+    Remove(head, current->right, num);
+  }
+  //If num is less than current data
+  else if (num < current->data) {
+    Remove(head, current->left, num);
+  }
+}
+
+//Fix double black violation
+//These functiosn are partially from Geeks for Geeks tutorial
+//www.geeksforgeeks.org/red-black-tree-set-3-delete-2
+void fixDoubleBlack(Node* &head, Node* c) {
+  if (c == head) {
+    return;
+  }
+  else {
+    Node* sibling = c->sibling();
+    Node* parent = c->parent;
+    cout << "C: " << c->data << endl;;
+    cout << "S: " << sibling->data << endl;;
+    cout << "P: " << parent->data << endl;
+    //No siblings
+    if (sibling == NULL) {
+      //Push up to parent
+      fixDoubleBlack(head, parent);
+    }
+    else {
+      //Red sibling
+      if (sibling->color == 'R') {
+	parent->color = 'R';
+	sibling->color = 'B';
+	//Left case
+	if (sibling->isOnLeft()) {
+	  rightRotate(head, parent);
+	}
+	//Right case
+	else {
+	  leftRotate(head, parent);
+	}
+	fixDoubleBlack(head, c);
+      }
+      //Black sibling
+      else  {
+	//At least 1 red child
+	if (sibling->hasRedChild()) {
+	  //Red node is sibling's left
+	  if (sibling->left != NULL && sibling->left->color == 'R') {
+	    //Left left case: red node is sibling's left and sibling is parent's left
+	    if (sibling->isOnLeft()) {
+	      sibling->left->color = sibling->color;
+	      sibling->color = parent->color;
+	      rightRotate(head, parent);
+	    }
+	    //Right left case: red node is sibling's left and sibling is parent's right
+	    else {
+	      sibling->left->color = parent->color;
+	      rightRotate(head, sibling);
+	      leftRotate(head, parent);
+	    }
+	  }
+	  //Red node is sibling's right
+	  else {
+	    //Left right case: red node is sibling's right and sibling is parent's left
+	    if (sibling->isOnLeft()) {
+	      sibling->right->color = parent->color;
+	      leftRotate(head, sibling);
+	      rightRotate(head, parent);
+	    }
+	    //Right right case: red node is sibling's right and sibling is parent's right
+	    else {
+	      sibling->right->color = sibling->color;
+	      sibling->color = parent->color;
+	      leftRotate(head, parent);
+	    }
+	  }
+	  parent->color = 'B';
+	}
+	//Two black children
+	else {
+	  cout << "ASDASDASDASDA" << endl;
+	  sibling->color = 'R';
+	  if (parent->color == 'B') {
+	    fixDoubleBlack(head, parent);
+	  }
+	  else {
+	    parent->color = 'B';
+	  }
+	}
+      }
+    }
+  }
+}
+
+
+//Left rotate the node
+void leftRotate(Node* &head, Node *c) {
+  //new parent will be node's right child
+  Node* nParent = c->right;
+  //Update head if c is head
+  if (c == head) {
+    head = nParent;
+  }
+  c->moveDown(nParent);
+  //Connect c with nParent's left 
+  c->right = nParent->left;
+  //Connect nParent's left with node if it's not NULL
+  if (nParent->left != NULL) {
+    nParent->left->parent = c;
+  }
+  //Connect nParent with c
+  nParent->left = c;
+}
+
+//Right rotate the node
+void rightRotate(Node* &head, Node* c) {
+  //New parent will be node's left child
+  Node* nParent = c->left;
+  //Update head if c is head
+  if (c == head) {
+    head = nParent;
+  }
+  c->moveDown(nParent);
+  //Connect c with nParent's right
+  c->left = nParent->right;
+  //Connect nParent's right with node if it's not NULL
+  if (nParent->right != NULL) {
+    nParent->right->parent = c;
+  }
+  //Connect nParent with c
+  nParent->right = c;
+}
+
+//Swaps values
+ void swapValues(Node* c, Node* s) {
+   int temp;
+   temp = c->data;
+   c->data = s->data;
+   s->data = temp;
+ }
+
+//Finds node that replaces a deleted node in BST
+Node* BSTreplace(Node* c){
+  //Two children
+  if (c->left != NULL && c->right != NULL) {
+    return successor(c->right);
+  }
+  //Leaf
+  if (c->left == NULL && c->right == NULL) {
+    return NULL;
+  }
+  //Single child
+  if (c->left != NULL) {
+    return c->left;
+  }
+  else {
+    return c->right;
+  }
+}
+
+//Finds node that doesn't have a left child in the subtree of the given node
+Node *successor(Node *c) {
+  Node * temp = c;
+  while (temp->left != NULL) {
+    temp = temp->left;
+  }
+  return temp;
 }
